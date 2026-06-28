@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CropAI - Crop Infection Prediction System</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- App.js -->
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <i class="fas fa-seedling"></i>
+          <h1>CropAI</h1>
+        </div>
+        <nav class="nav-tabs">
+          <button class="nav-tab active" data-tab="prediction"><i class="fas fa-search"></i> Prediction</button>
+          <button class="nav-tab" data-tab="history"><i class="fas fa-history"></i> History</button>
+          <button class="nav-tab" data-tab="pesticide"><i class="fas fa-flask"></i> Pesticides</button>
+          <button class="nav-tab" data-tab="metrics"><i class="fas fa-chart-bar"></i> Performance</button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Prediction Tab -->
+      <div id="result" class="result-box" style="margin-top:20px; padding:15px; border:1px solid #ddd; border-radius:8px;">
+    <p style="color:gray;">Prediction results will appear here...</p>
+</div>
+
+      <div class="tab-content active" id="prediction-tab">
+        <div class="dashboard-grid">
+          <!-- Input Form -->
+          <div class="card input-card">
+            <div class="card-header">
+              <h3><i class="fas fa-leaf"></i> Crop Parameters</h3>
+              <p>Enter your field measurements below</p>
+              <form id="predictForm" class="prediction-form">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label for="soilMoisture"><i class="fas fa-tint"></i> Soil Moisture (%)</label>
+                    <input type="number" id="soilMoisture" min="0" max="100" step="0.1" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="soilTemp"><i class="fas fa-thermometer-half"></i> Soil Temperature (°C)</label>
+                    <input type="number" id="soilTemp" min="-10" max="60" step="0.1" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="airTemp"><i class="fas fa-thermometer-half"></i> Air Temperature (°C)</label>
+                    <input type="number" id="airTemp" min="-10" max="50" step="0.1" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="airHumidity"><i class="fas fa-cloud"></i> Air Humidity (%)</label>
+                    <input type="number" id="airHumidity" min="0" max="100" step="0.1" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="soilSalinity"><i class="fas fa-vial"></i> Soil Salinity (dS/m)</label>
+                    <input type="number" id="soilSalinity" min="0" max="20" step="0.1" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="ndvi"><i class="fas fa-satellite"></i> NDVI Index</label>
+                    <input type="number" id="ndvi" min="-1" max="1" step="0.01" required>
+                  </div>
+                </div>
+                <button type="submit" class="predict-btn"><i class="fas fa-magic"></i> Predict Infection Level</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Results -->
+          <div class="results-section">
+            <div class="card result-card">
+              <div class="card-header">
+                <h3><i class="fas fa-gauge-high"></i> Infection Level</h3>
+              </div>
+              <div class="gauge-container">
+                <div class="gauge" id="infection-gauge">
+                  <div class="gauge-needle" id="gauge-needle"></div>
+                  <div class="gauge-center">
+                    <span class="gauge-value" id="gauge-value">-</span>
+                    <span class="gauge-label">/ 10</span>
+                  </div>
+                </div>
+                <div class="gauge-scale">
+                  <span class="scale-low">Low Risk</span>
+                  <span class="scale-medium">Medium Risk</span>
+                  <span class="scale-high">High Risk</span>
+                </div>
+              </div>
+              <div class="confidence-display" id="confidence-display">
+                <div class="confidence-bar">
+                  <div class="confidence-fill" id="confidence-fill"></div>
+                </div>
+                <span class="confidence-text" id="confidence-text">Confidence: -</span>
+              </div>
+            </div>
+
+            <div class="card chart-card">
+              <div class="card-header">
+                <h3><i class="fas fa-chart-line"></i> Infection Trend</h3>
+              </div>
+              <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Explanation -->
+        <div class="card explanation-card" id="explanation-section" style="display:none;">
+          <div class="card-header">
+            <h3><i class="fas fa-lightbulb"></i> What This Means for Your Crops</h3>
+          </div>
+          <div class="explanation-content" id="explanation-content"></div>
+        </div>
+      </div>
+
+      <!-- History Tab -->
+      <div class="tab-content" id="history-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-history"></i> Prediction History</h3>
+          </div>
+          <div class="table-container">
+            <table id="historyTable">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Infection Level</th>
+                  <th>Risk</th>
+                  <th>Confidence</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pesticide Tab -->
+      <div class="tab-content" id="pesticide-tab">
+        <div class="pesticide-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-flask"></i> Recommended Pesticides</h3>
+            </div>
+            <div id="pesticideRecommendations"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-calculator"></i> Dosage Calculator</h3>
+              <p>Fixed for Wheat</p>
+            </div>
+            <form id="dosageForm">
+              <div class="form-group">
+                <label for="acreInput">Field Size (in acres)</label>
+                <input type="number" id="acreInput" min="0.1" step="0.1" required>
+              </div>
+              <button type="submit" class="calculate-btn">
+                <i class="fas fa-calculator"></i> Calculate Dosage
+              </button>
+            </form>
+            <div id="dosageResult"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metrics Tab -->
+      <div class="tab-content" id="metrics-tab">
+        <div class="metrics-grid">
+          <div class="card metric-card">
+            <h4><i class="fas fa-bullseye"></i> Accuracy</h4>
+            <div class="metric-value">92.5%</div>
+            <div id="accuracy-value">-</div>
+          </div>
+          <div class="card metric-card">
+            <h4><i class="fas fa-crosshairs"></i> Precision</h4>
+            <div class="metric-value">89.3%</div>
+            <div id="precision-value">-</div>
+          </div>
+          <div class="card metric-card">
+            <h4><i class="fas fa-search"></i> Recall</h4>
+            <div class="metric-value">94.7%</div>
+            <div id="recall-value">-</div>
+          </div>
+          <div class="card metric-card">
+            <h4><i class="fas fa-balance-scale"></i> F1 Score</h4>
+            <div class="metric-value">91.9%</div>
+            <div id="f1-value">-</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
